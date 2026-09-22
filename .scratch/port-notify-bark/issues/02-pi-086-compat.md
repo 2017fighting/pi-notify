@@ -1,6 +1,6 @@
 # pi 0.84→0.86.1 兼容性核查：notify 触碰的每个 pi API 还能用吗
 
-Status: open
+Status: resolved
 Type: research
 
 ## Question
@@ -15,3 +15,9 @@ Type: research
 4. **事件名核对**：notify 依赖的 pi 生命周期事件（agent_end、workflow_end、session_shutdown 等）在 0.84 与 0.86 之间是否有增删改名。
 
 若发现破坏性变更，不要给完整补丁 —— 只给事实与适配点清单，具体拆票由地图毕业（见 map.md Not yet specified）。
+
+## Answer
+
+pi 0.84→0.86.1 对 notify 的 API 触面**零破坏**：ExtensionAPI/registerTool/registerCommand/ExtensionContext/ui.* /ToolDefinition.execute/EventBus 签名逐字相同；唯一变化是 `pi.on()` 现返回 unsubscribe 函数（纯增强）。生命周期事件（session_start/session_shutdown/agent_start/agent_end/agent_settled）无增删改名，payload 不变；仅新增 `cache_warming_decision`。pi-tui 的 Component/Key/matchesKey 不变。移植后代码可在 0.86.1 原样运行，无强制适配点，决定 #7 的 peerDeps 范围成立。注意：本机 0.86.1 为原生二进制安装无 .d.ts，核查基于 npm registry 的 0.84.4/0.86.1 tgz 对照。
+
+详见 [research/pi-086-compat.md](../research/pi-086-compat.md)。
