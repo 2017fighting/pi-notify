@@ -1,6 +1,5 @@
 # Bark icon 默认值：打包资产改为哪种远程 URL 方案
 
-Status: open
 Type: grilling
 Status: resolved
 

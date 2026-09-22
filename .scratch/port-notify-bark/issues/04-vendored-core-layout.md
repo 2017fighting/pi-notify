@@ -1,6 +1,5 @@
 # 内联 core 的模块结构：单文件还是镜像模块
 
-Status: open
 Type: grilling
 Status: resolved
 Blocked by: 01
