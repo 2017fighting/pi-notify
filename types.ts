@@ -1,0 +1,184 @@
+/**
+ * @raincore/pi-notify — TypeScript type definitions
+ */
+
+/** Supported notification platforms */
+export type NotifyPlatform = "native" | "gotify" | "telegram" | "ntfy" | "bark";
+
+/** Per-event notification configuration */
+export interface EventNotifyConfig {
+  /** Whether this event type is enabled */
+  enabled: boolean;
+  /** Platforms to send to (empty = use global defaults) */
+  platforms: NotifyPlatform[];
+}
+
+/** Native notification platform config */
+export interface NativeConfig {
+  /** Whether native notifications are enabled */
+  enabled: boolean;
+  /** Windows appID to show instead of "SnoreToast" */
+  windowsAppId?: string;
+  /**
+   * When true, suppresses the notification if the terminal window is the
+   * foreground (active) window. Only effective on supported platforms
+   * (currently Windows). Default: false.
+   */
+  suppressWhenFocused?: boolean;
+}
+
+/** Gotify notification platform config */
+export interface GotifyConfig {
+  /** Whether Gotify is enabled */
+  enabled: boolean;
+  /** Gotify server URL */
+  serverUrl?: string;
+  /** Gotify app token */
+  appToken?: string;
+  /** Priority level (1-10) */
+  priority: number;
+}
+
+/** Telegram notification platform config */
+export interface TelegramConfig {
+  /** Whether Telegram is enabled */
+  enabled: boolean;
+  /** Telegram bot token */
+  botToken?: string;
+  /** Telegram chat ID */
+  chatId?: string;
+}
+
+/** ntfy notification platform config */
+export interface NtfyConfig {
+  /** Whether ntfy is enabled */
+  enabled: boolean;
+  /** ntfy server URL (default: https://ntfy.sh) */
+  serverUrl?: string;
+  /** ntfy topic to publish to */
+  topic?: string;
+  /** Optional access token for authenticated ntfy servers */
+  token?: string;
+  /** Priority level (1-5, default: 3) */
+  priority: number;
+}
+
+/** Bark interruption level (iOS 15+) — camelCase per the Bark API */
+export type BarkLevel = "active" | "passive" | "timeSensitive" | "critical";
+
+/** Bark notification platform config */
+export interface BarkConfig {
+  /** Whether Bark is enabled */
+  enabled: boolean;
+  /** Bark server URL (default: https://api.day.app; self-hosted supported) */
+  serverUrl?: string;
+  /** Device key from the Bark app */
+  deviceKey?: string;
+  /** Message group name (messages with the same group fold together) */
+  group?: string;
+  /** Notification icon URL (remote URL only — Bark does not accept uploads) */
+  icon?: string;
+  /** Alert sound name (built-in or imported; unknown names fall back) */
+  sound?: string;
+  /**
+   * Explicit interruption level. Wins over the semantic priority mapping
+   * (low/normal/high → passive/active/timeSensitive). `critical` requires
+   * the critical-alert entitlement enabled in the Bark app.
+   */
+  level?: BarkLevel;
+  /** HTTP timeout in milliseconds (default: 4000) */
+  timeoutMs?: number;
+}
+
+/** Recap notification config */
+export interface RecapConfig {
+  /** Whether recap summarization is enabled */
+  enabled: boolean;
+  /** Model to use for recap (e.g. "openrouter/openai/gpt-oss-20b") */
+  model: string;
+  /**
+   * Send `chat_template_kwargs: { enable_thinking: false, preserve_thinking: false }`
+   * with recap requests so llama.cpp/vLLM-style servers skip reasoning tokens.
+   * Without this, a thinking model can burn the entire 100-token budget on
+   * reasoning and return no summary (issue #36). Only enable for endpoints
+   * that accept these params — strict OpenAI-compatible servers reject them.
+   * The Anthropic path ignores this (thinking is opt-in there already).
+   */
+  disableThinking?: boolean;
+}
+
+/** Quiet listed platforms after recent terminal input */
+export interface SilenceAfterInputConfig {
+  /** Master switch */
+  enabled: boolean;
+  /** Quiet window after the last keypress, in milliseconds */
+  windowMs: number;
+  /** Platforms to suppress (empty = all enabled platforms) */
+  platforms: NotifyPlatform[];
+}
+
+/** Re-send an unanswered human-blocking prompt until someone acts */
+export interface RenotifyConfig {
+  /** Master switch */
+  enabled: boolean;
+  /** Delay between reminders, in milliseconds */
+  intervalMs: number;
+  /** Reminders to send after the first notification (0 = none) */
+  maxRepeats: number;
+}
+
+/** Full notification configuration */
+export interface NotifyConfig {
+  /** Global default platforms for all events */
+  defaultPlatforms: NotifyPlatform[];
+  /** Per-event type overrides */
+  events: Record<string, EventNotifyConfig>;
+  /** Native platform settings */
+  native: NativeConfig;
+  /** Gotify settings */
+  gotify: GotifyConfig;
+  /** Telegram settings */
+  telegram: TelegramConfig;
+  /** Recap summarization settings */
+  recap: RecapConfig;
+  /** Suppress listed platforms after recent terminal input */
+  silenceAfterInput: SilenceAfterInputConfig;
+  /** Re-notify unanswered human-blocking prompts */
+  renotify: RenotifyConfig;
+}
+
+/** Parameters for the notify_user agent tool */
+export type NotifyPriority = "low" | "normal" | "high";
+
+export interface NotifyUserParams {
+  /** Notification message body */
+  message: string;
+  /** Notification title (default: "Pi Notification") */
+  title?: string;
+  /** Priority level */
+  priority?: NotifyPriority;
+  /** Override platforms for this notification */
+  platforms?: NotifyPlatform[];
+}
+
+/** Result of sending a notification to a single platform */
+export interface NotifyResult {
+  /** Platform that was targeted */
+  platform: NotifyPlatform;
+  /** Whether the send succeeded */
+  success: boolean;
+  /** True when the notification was intentionally suppressed (e.g. window focused) */
+  suppressed?: boolean;
+  /** Effective numeric priority for platforms that support it. */
+  priority?: number;
+  /** Error message if failed */
+  error?: string;
+}
+
+/** Notification dispatch summary */
+export interface NotifyDispatchResult {
+  /** Results per platform */
+  results: NotifyResult[];
+  /** Whether all platforms succeeded */
+  allSuccess: boolean;
+}
