@@ -1,6 +1,6 @@
 {
   "name": "@raincore/pi-notify",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cross-platform notification extension for Pi — native OS, Gotify, Telegram, ntfy, and Bark notifications for agent lifecycle events",
   "type": "module",
   "main": "index.ts",

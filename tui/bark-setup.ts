@@ -53,12 +53,16 @@ export class BarkSetupOverlay implements Component {
     // Determine current scope and pre-fill from resolved config
     const cwd = process.cwd();
     const existingScope = getBarkConfigScope(cwd);
-    if (existingScope !== "none") {
+    const hadSaved = existingScope !== "none";
+    if (hadSaved) {
       this.scope = existingScope;
       this.scopeIndex = existingScope === "project" ? 1 : 0;
     }
     const config = loadBarkConfig(cwd);
-    if (config.serverUrl) this.serverUrl = config.serverUrl;
+    // Only pre-fill the server when a saved config exists — the built-in
+    // default (api.day.app) would otherwise hide the server-url step on a
+    // fresh install and self-hosters would never be asked for their domain.
+    if (hadSaved && config.serverUrl) this.serverUrl = config.serverUrl;
     if (config.deviceKey) this.deviceKey = config.deviceKey;
     if (config.group) this.group = config.group;
     if (config.sound) this.sound = config.sound;
@@ -91,7 +95,7 @@ export class BarkSetupOverlay implements Component {
           this.scopeIndex = Math.min(1, this.scopeIndex + 1);
         } else if (data === "\r" || data === " ") {
           this.scope = this.scopeIndex === 1 ? "project" : "global";
-          this.phase = this.serverUrl ? "device-key" : "server-url";
+          this.phase = "server-url";
         } else if (matchesKey(data, "escape")) {
           this.onClose?.();
         }
