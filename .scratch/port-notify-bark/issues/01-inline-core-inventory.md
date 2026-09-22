@@ -1,6 +1,6 @@
 # 内联 core 依赖清单：要搬什么、最小怎么搬
 
-Status: open
+Status: resolved
 Type: research
 
 ## Question
@@ -16,3 +16,9 @@ Type: research
 5. **许可证归属**：core 为 MIT（作者 Neuron Mr White），给出内联时归属说明的建议位置与措辞。
 
 约束：上游 notify 文件本身保持结构不变（决定 #6），因此内联物对外导出的模块路径越像 `@pi-unipi/core` 越好（如 `./vendored/core.js` 一处 import 改写）。产出为事实与选项，最终布局决定留给 [内联 core 的模块结构](04-vendored-core-layout.md)。
+
+## Answer
+
+grep 核实：notify 全目录共 13 处 `@pi-unipi/core` 导入、11 个符号，票面线索清单恰好完备。闭包收敛在 core 的 6 个文件（constants/events/utils/model-cache/tui-width/tui-overlay），裁剪后约 260–320 行、整文件约 1055 行；唯一外部依赖是 Theme（type-only）与 pi-tui 两个纯函数，均已是 notify peerDependencies，无剥离障碍。推荐 vendored/*.ts 镜像布局 + vendored/index.ts re-export，使上游 notify 文件只需 13 处单行 import 改写；MIT 归属放 vendored/NOTICE.md。注意点：UNIPI_PREFIX、NOTIFY_DIRS.CONFIG、MODULES.NOTIFY 三个常量含 unipi 品牌，是决定 #3 的 vendored 改写点。
+
+详见 [research/core-inventory.md](../research/core-inventory.md)。
