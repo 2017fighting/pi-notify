@@ -26,16 +26,17 @@ Label: wayfinder:map
   7. **peerDependencies**：^0.84.0 || ^0.85.0 || ^0.86.0。
   8. **英文文案**：通知标题/正文沿用上游英文硬编码。
   9. **Bark 配置形态**：serverUrl + deviceKey 分字段（ntfy 风格）。
-  10. **内置 Pi 图标**：打包 pi-bark 的 assets/pi-icon.png（512×512，Pi 官方 badge，MIT）作为 icon 默认值。
+  10. **内置 Pi 图标**：~~打包 pi-icon.png 作为 icon 默认值~~ ⚠️ 已被 [Bark 推送 API 契约确认](issues/03-bark-api-contract.md) 的事实推翻：Bark icon 仅接受远程 URL，本地打包 png 不生效。改写方案见 [Bark icon 默认值](issues/05-bark-icon-default.md)。
 
 ## Decisions so far
 
-（暂无已关票；上方 Notes 为 charting 会话直接敲定的起点决定）
+- [内联 core 依赖清单](issues/01-inline-core-inventory.md) — 11 符号闭包落 6 文件、裁剪约 260–320 行、唯一外部依赖 Theme(type) + pi-tui 两函数（均已是 peerDeps）；推荐镜像布局 `vendored/*.ts` + `vendored/index.ts`，notify 侧仅 13 处单行 import 改写；另定位去品牌改写点 `UNIPI_PREFIX`/`NOTIFY_DIRS.CONFIG`/`MODULES.NOTIFY`。详：[research/core-inventory.md](research/core-inventory.md)
+- [pi 0.84→0.86.1 兼容性核查](issues/02-pi-086-compat.md) — notify 全触面无破坏性变更（唯一变化：`pi.on()` 0.86 起返回 unsubscribe，纯增强且 notify 未用），0.86.1 可原样运行；peerDeps `^0.84.0 || ^0.85.0 || ^0.86.0` 成立；**无适配点，无需拆票**。详：[research/pi-086-compat.md](research/pi-086-compat.md)
+- [Bark 推送 API 契约确认](issues/03-bark-api-contract.md) — `POST {serverUrl}/{deviceKey}` form 编码全字符串、参数名全小写、level 枚举 camelCase 与决定 #4 完全吻合、失败只判 `response.ok` 不解析响应体、timeout 沿用 4000ms；**icon 仅接受远程 URL** → 推翻决定 #10，毕业为 [Bark icon 默认值](issues/05-bark-icon-default.md)。详：[research/bark-api-contract.md](research/bark-api-contract.md)
 
 ## Not yet specified
 
-- Bark 平台补充设计 —— 若 [Bark 推送 API 契约确认](issues/03-bark-api-contract.md) 的发现与现有假设冲突（如 device_key 位置、form 编码细节、错误语义），可能毕业为一张小的设计票。
-- pi 0.86 适配补丁 —— 若 [pi 0.84→0.86.1 兼容性核查](issues/02-pi-086-compat.md) 发现破坏性变更，其具体适配方案待事实回来后再拆票。
+（暂无 —— 原雾团「pi 0.86 适配补丁」因 02 号票证实零适配点而直接消散；「Bark 平台补充设计」已收窄并毕业为 [Bark icon 默认值](issues/05-bark-icon-default.md)，其余契约事实均与既有假设吻合。）
 
 ## Out of scope
 
