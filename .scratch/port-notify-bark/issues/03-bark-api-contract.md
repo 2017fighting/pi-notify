@@ -1,6 +1,6 @@
 # Bark 推送 API 契约确认：bark.ts 实现的精确事实
 
-Status: open
+Status: resolved
 Type: research
 
 ## Question
@@ -16,3 +16,13 @@ pi-notify 将新增 platforms/bark.ts（一等平台，见 map.md 决定 #2/#4/#
 5. **icon 参数**：确认 icon 接受远程 URL（pi-bark 打包了本地 png 但 URL 才是 Bark 语义？还是两者都行）——这影响"内置 Pi 图标"（决定 #10）的实现方式：是配置默认 URL、运行时上传、还是文档说明用户自托管。
 
 产出为契约事实表（每条带来源引用），供 bark.ts 直接照写，不需要写实现代码。
+
+## Answer
+
+- 请求形状钉死：`POST {serverUrl}/{deviceKey}`，form (application/x-www-form-urlencoded)，全部参数进 body，值全为字符串（pi-bark 同款，官方文档一致）。
+- 参数名小写：title/subtitle/body/group/icon/sound/level；level 枚举 active/passive/timeSensitive/critical —— 决定 #4 映射合法。
+- 布尔在 form 中传 "1"（isArchive/call/delete）；pi-bark 用 String() 序列化。
+- 响应/错误：本地无 bark-server 源码，文档未给 JSON 形状；bark.ts 只判 response.ok，勿解析响应体。timeout 沿用 pi-bark 4000ms + AbortSignal.timeout。
+- ⚠️ 意外发现：icon 只接受远程 URL（客户端下载缓存），本地打包 png 不生效 —— pi-bark 也是靠 GitHub raw URL。决定 #10 需改为默认远程 URL / 文档引导自托管，建议毕业小设计票。
+
+详见 [research/bark-api-contract.md](../research/bark-api-contract.md)
