@@ -121,6 +121,22 @@ describe("silence after input", () => {
     assert.deepEqual(merged.platforms, ["native", "ntfy"]);
   });
 
+  it("keeps bel as a valid silence channel when merging", () => {
+    const merged = mergeSilenceAfterInput({ platforms: ["bel"] }, DEFAULTS);
+    assert.deepEqual(merged.platforms, ["bel"]);
+  });
+
+  it("silences bel like any other platform", () => {
+    noteInput(1_000);
+    const { send, silenced } = filterPlatformsAfterInput(
+      ["native", "bel"],
+      config({ platforms: ["bel"] }),
+      1_000 + 100,
+    );
+    assert.deepEqual(send, ["native"]);
+    assert.deepEqual(silenced, ["bel"]);
+  });
+
   it("lets blocking events through inside the window", () => {
     noteInput(1_000);
     for (const eventType of ["ask_user_prompt", "permission_request"]) {

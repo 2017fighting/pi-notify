@@ -35,6 +35,9 @@ export const DEFAULT_CONFIG: NotifyConfig = {
     enabled: true,
     suppressWhenFocused: false,
   },
+  bel: {
+    enabled: false,
+  },
   gotify: {
     enabled: false,
     priority: 5,
@@ -130,6 +133,7 @@ function mergeWithDefaults(loaded: Partial<NotifyConfig>): NotifyConfig {
     defaultPlatforms: loaded.defaultPlatforms ?? base.defaultPlatforms,
     events: { ...base.events, ...loaded.events },
     native: { ...base.native, ...loaded.native },
+    bel: { ...base.bel, ...loaded.bel },
     gotify: { ...base.gotify, ...loaded.gotify },
     telegram: { ...base.telegram, ...loaded.telegram },
     recap: { ...base.recap, ...loaded.recap },

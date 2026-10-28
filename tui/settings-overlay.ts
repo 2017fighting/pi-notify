@@ -21,18 +21,19 @@ import { OverlayTheme, boxInnerWidth } from "../vendored/index.js";
 /** Section types */
 type Section = "platforms" | "events" | "recap" | "renotify";
 
-const PLATFORM_KEYS: NotifyPlatform[] = ["native", "gotify", "telegram", "ntfy", "bark"];
+const PLATFORM_KEYS: NotifyPlatform[] = ["native", "gotify", "telegram", "ntfy", "bark", "bel"];
 const CHIP_LABELS: Record<NotifyPlatform, string> = {
   native: "Native",
   gotify: "Gotify",
   telegram: "Telegram",
   ntfy: "ntfy",
   bark: "Bark",
+  bel: "BEL",
 };
 
-const SUPPRESS_FOCUSED_INDEX = 5;
-const SILENCE_MASTER_INDEX = 6;
-const SILENCE_CHIPS_INDEX = 7;
+const SUPPRESS_FOCUSED_INDEX = 6;
+const SILENCE_MASTER_INDEX = 7;
+const SILENCE_CHIPS_INDEX = 8;
 
 const WINDOW_STEP_MS = 1_000;
 const WINDOW_MIN_MS = 1_000;
@@ -169,7 +170,7 @@ export class NotifySettingsOverlay implements Component {
   }
 
   private get maxItems(): number {
-    if (this.section === "platforms") return 8; // 5 platforms + focused + silence master + chips
+    if (this.section === "platforms") return 9; // 6 platforms + focused + silence master + chips
     if (this.section === "recap") return 1; // toggle
     if (this.section === "renotify") return 3; // enable + interval + max repeats
     return Object.keys(this.config.events).length;
@@ -394,6 +395,11 @@ export class NotifySettingsOverlay implements Component {
           ? `Server: ${this.barkConfig.serverUrl ?? "—"} · [${this.barkScope}]`
           : "Not configured (iOS push)",
       },
+      {
+        key: "bel",
+        label: "BEL",
+        detail: "Terminal bell (stdout, interactive TTY only)",
+      },
     ];
 
     for (let i = 0; i < platforms.length; i++) {
@@ -417,7 +423,7 @@ export class NotifySettingsOverlay implements Component {
       );
     }
 
-    // suppressWhenFocused toggle (index 5)
+    // suppressWhenFocused toggle (index 6)
     {
       const isSelected = this.selectedIndex === SUPPRESS_FOCUSED_INDEX;
       const isEnabled = this.config.native.suppressWhenFocused === true;

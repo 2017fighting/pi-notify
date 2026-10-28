@@ -15,6 +15,7 @@ import { sendGotifyNotification } from "./platforms/gotify.js";
 import { sendTelegramNotification } from "./platforms/telegram.js";
 import { sendNtfyNotification } from "./platforms/ntfy.js";
 import { sendBarkNotification } from "./platforms/bark.js";
+import { sendBelNotification } from "./platforms/bel.js";
 import { buildAskUserPromptMessage } from "./ask-user-prompt-message.js";
 import { buildPermissionPromptMessage } from "./permission-prompt-message.js";
 import { summarizeLastMessage } from "./summarize.js";
@@ -259,6 +260,7 @@ function getEnabledPlatforms(config: NotifyConfig, ntfyEnabled: boolean, barkEna
   if (config.telegram.enabled) enabled.push("telegram");
   if (ntfyEnabled) enabled.push("ntfy");
   if (barkEnabled) enabled.push("bark");
+  if (config.bel.enabled) enabled.push("bel");
   return enabled;
 }
 
@@ -303,6 +305,7 @@ export async function dispatchNotification(
     if (p === "telegram") return config.telegram.enabled;
     if (p === "ntfy") return ntfyConfig.enabled;
     if (p === "bark") return barkConfig.enabled;
+    if (p === "bel") return config.bel.enabled;
     return false;
   });
 
@@ -446,6 +449,11 @@ async function sendToPlatform(
       );
       return undefined;
     }
+    case "bel":
+      // Attention only — the terminal decides whether this is audible, visual,
+      // or (outside a TTY) nothing at all. Never a dispatch failure.
+      sendBelNotification();
+      return undefined;
   }
 }
 

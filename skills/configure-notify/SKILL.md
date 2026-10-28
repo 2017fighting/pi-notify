@@ -1,7 +1,7 @@
 ---
 name: configure-notify
 description: >
-  Help user configure Pi notification settings — platforms (native, Gotify, Telegram),
+  Help user configure Pi notification settings — platforms (native, Gotify, Telegram, ntfy, Bark, BEL),
   events, and per-event routing. Guide through setup or make changes directly.
 ---
 
@@ -12,7 +12,7 @@ Help users configure the `@raincore/pi-notify` notification system.
 ## When to use
 
 - User asks to set up notifications
-- User asks to enable/configure Gotify, Telegram, or native notifications
+- User asks to enable/configure Gotify, Telegram, ntfy, Bark, BEL, or native notifications
 - User wants to change which events trigger notifications
 - User asks about notification settings
 
@@ -43,6 +43,9 @@ Help users configure the `@raincore/pi-notify` notification system.
   "native": {
     "enabled": true,
     "windowsAppId": null
+  },
+  "bel": {
+    "enabled": false
   },
   "gotify": {
     "enabled": false,
@@ -82,6 +85,34 @@ Help users configure the `@raincore/pi-notify` notification system.
 
 Desktop notifications via node-notifier. Works out of the box on Windows, macOS, Linux.
 
+### BEL (default: disabled)
+
+Rings the interactive terminal pi runs in: one ASCII bell byte (`0x07`) written to stdout when `process.stdout.isTTY` is true. No credentials, no server, nothing to validate.
+
+- Outside a TTY (redirected output, piped RPC transports such as Zed or the VS Code pendant) it is a silent no-op, not a failure.
+- One ring per dispatch. Blocking prompts ring again on every re-notify.
+- Priority/title/body do not apply — BEL is attention only.
+- It participates in `silenceAfterInput` like every other channel.
+
+TUI: `/notify:settings` → Platforms → BEL (Space toggles). JSON:
+
+```json
+"bel": { "enabled": false }
+```
+
+#### tmux
+
+A bell from a background window sets that window's status-line flag; a bell in the current window is passed to the outer terminal and usually ignored. That is the intended use: BEL tells you Pi needs you in another tmux window.
+
+```tmux
+set -g  bell-action other          # only bells from non-current windows alert
+set -g  visual-bell on             # status-line message instead of pass-through
+setw -g monitor-bell on            # flag windows that received a bell (default)
+setw -g window-status-bell-style "fg=yellow,bold"
+```
+
+Test it with a delay so you can switch windows first: `/notify:test 5`.
+
 ### Silence after input
 
 Quiet listed platforms for `windowMs` after any terminal keypress. **Default: off.** Same `config.json` as other notify settings.
@@ -96,7 +127,7 @@ Quiet listed platforms for `windowMs` after any terminal keypress. **Default: of
 
 - `enabled` — master switch
 - `windowMs` — quiet window in milliseconds (default: 10000)
-- `platforms` — channels to silence (`native`, `gotify`, `telegram`, `ntfy`). Empty list silences all enabled platforms (same as `events.*.platforms`).
+- `platforms` — channels to silence (`native`, `gotify`, `telegram`, `ntfy`, `bark`, `bel`). Empty list silences all enabled platforms (same as `events.*.platforms`).
 
 TUI: `/notify:settings` → Platforms → Quiet after activity (Space), ←→ then Space for channels, +/− for the window (1s steps).
 
@@ -228,7 +259,7 @@ Keep `bark.json` private — the device key is in it. Semantic priority maps low
 | `/notify:set-tg` | Interactive Telegram setup wizard |
 | `/notify:set-ntfy` | Interactive ntfy setup wizard |
 | `/notify:set-bark` | Interactive Bark setup wizard |
-| `/notify:test` | Send test notification to all enabled platforms |
+| `/notify:test` | Send test notification to all enabled platforms (optional delay in seconds) |
 
 ## Events
 
@@ -300,6 +331,7 @@ Read the JSON, make changes, write it back. Example:
 For Gotify: suggest running `/notify:set-gotify`
 For Telegram: suggest running `/notify:set-tg`
 For ntfy: suggest running `/notify:set-ntfy`
+For BEL: no wizard — toggle it in `/notify:settings` → Platforms
 For general settings: suggest `/notify:settings`
 
 ## Validation rules
@@ -311,3 +343,4 @@ For general settings: suggest `/notify:settings`
 - ntfy: `priority` must be 1-5
 - renotify: `intervalMs` must be a finite number >= 10000 (else the default 120000 is used)
 - renotify: `maxRepeats` must be an integer >= 0 (else the default 3 is used)
+- BEL: no required fields — the terminal, not the config, decides whether a bell is audible, visual, or silent

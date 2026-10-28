@@ -3,7 +3,7 @@
  */
 
 /** Supported notification platforms */
-export type NotifyPlatform = "native" | "gotify" | "telegram" | "ntfy" | "bark";
+export type NotifyPlatform = "native" | "gotify" | "telegram" | "ntfy" | "bark" | "bel";
 
 /** Per-event notification configuration */
 export interface EventNotifyConfig {
@@ -25,6 +25,17 @@ export interface NativeConfig {
    * (currently Windows). Default: false.
    */
   suppressWhenFocused?: boolean;
+}
+
+/**
+ * BEL (terminal bell) platform config.
+ *
+ * No credentials: the byte goes to the interactive terminal pi runs in. The
+ * terminal decides whether that is audible, visual, or nothing.
+ */
+export interface BelConfig {
+  /** Whether terminal-bell notifications are enabled */
+  enabled: boolean;
 }
 
 /** Gotify notification platform config */
@@ -135,6 +146,8 @@ export interface NotifyConfig {
   events: Record<string, EventNotifyConfig>;
   /** Native platform settings */
   native: NativeConfig;
+  /** Terminal-bell platform settings */
+  bel: BelConfig;
   /** Gotify settings */
   gotify: GotifyConfig;
   /** Telegram settings */

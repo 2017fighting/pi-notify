@@ -195,6 +195,19 @@ describe("settings overlay: toggle, tab, model-selector key, save", () => {
     assert.ok(selectedLine(overlay).includes("●"), "kitty Space re-enables");
   });
 
+  it("renders and persists the BEL platform row", () => {
+    freshHome();
+    const overlay = new NotifySettingsOverlay();
+    for (let i = 0; i < 5; i++) overlay.handleInput("j"); // native..bark -> bel
+    assert.ok(stripAnsi(selectedLine(overlay)).includes("BEL"), "BEL row selected");
+    assert.ok(stripAnsi(selectedLine(overlay)).includes("○"), "BEL disabled by default");
+    overlay.handleInput(" ");
+    assert.ok(stripAnsi(selectedLine(overlay)).includes("●"), "Space enables BEL");
+    overlay.handleInput(ENTER_ENCODINGS[0]);
+    const cfg = readNotifyConfig() as { bel: { enabled: boolean } };
+    assert.equal(cfg.bel.enabled, true);
+  });
+
   it("switches sections with Tab in both encodings", () => {
     freshHome();
     const overlay = new NotifySettingsOverlay();
@@ -236,11 +249,11 @@ describe("settings overlay: toggle, tab, model-selector key, save", () => {
 });
 
 function goToSilenceMaster(overlay: NotifySettingsOverlay): void {
-  for (let i = 0; i < 6; i++) overlay.handleInput("j");
+  for (let i = 0; i < 7; i++) overlay.handleInput("j");
 }
 
 function goToSilenceChips(overlay: NotifySettingsOverlay): void {
-  for (let i = 0; i < 7; i++) overlay.handleInput("j");
+  for (let i = 0; i < 8; i++) overlay.handleInput("j");
 }
 
 describe("settings overlay: silence after input", () => {
@@ -250,7 +263,7 @@ describe("settings overlay: silence after input", () => {
     goToSilenceMaster(overlay);
     assert.ok(
       selectedLine(overlay).includes("Quiet after activity"),
-      "5 downs land on the silence master row",
+      "6 downs land on the silence master row",
     );
     overlay.handleInput("j");
     const chips = stripAnsi(selectedLine(overlay));
@@ -317,7 +330,7 @@ describe("settings overlay: silence after input", () => {
     );
   });
 
-  it("saves all five chips as an empty platforms array", () => {
+  it("saves all six chips as an empty platforms array", () => {
     freshHome();
     const overlay = new NotifySettingsOverlay();
     goToSilenceChips(overlay);
@@ -329,6 +342,8 @@ describe("settings overlay: silence after input", () => {
     overlay.handleInput(" "); // ntfy
     overlay.handleInput("l");
     overlay.handleInput(" "); // bark
+    overlay.handleInput("l");
+    overlay.handleInput(" "); // bel
     overlay.handleInput(ENTER_ENCODINGS[0]);
     const cfg = readNotifyConfig() as {
       silenceAfterInput: { enabled: boolean; platforms: string[] };

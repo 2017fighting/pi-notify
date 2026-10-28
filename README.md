@@ -1,10 +1,10 @@
 # @raincore/pi-notify
 
-Push notifications when things happen. Workflow finishes, Ralph loop completes, MCP server errors — notify sends alerts to native OS, Gotify, Telegram, ntfy, or **Bark** (iOS).
+Push notifications when things happen. Workflow finishes, Ralph loop completes, MCP server errors — notify sends alerts to native OS, Gotify, Telegram, ntfy, **Bark** (iOS), or the terminal's own bell (**BEL**).
 
 Configure once, get alerts everywhere. Per-event platform routing lets you send critical errors to Telegram and routine completions to Bark. Native desktop notifications can also be suppressed while the Pi window is focused.
 
-> Ported from [`@pi-unipi/notify`](https://github.com/Neuron-Mr-White/unipi) (v2.20.5) as a standalone, de-branded package with zero UniPi dependencies — shared helpers are vendored under `vendored/` (see `vendored/NOTICE.md`). Bark platform added; command prefix is `/notify:*` and config lives in `~/.pi/agent/notify/`.
+> Ported from [`@pi-unipi/notify`](https://github.com/Neuron-Mr-White/unipi) (v2.20.5) as a standalone, de-branded package with zero UniPi dependencies — shared helpers are vendored under `vendored/` (see `vendored/NOTICE.md`). Bark and BEL platforms added; command prefix is `/notify:*` and config lives in `~/.pi/agent/notify/`.
 
 ## Commands
 
@@ -17,7 +17,7 @@ Configure once, get alerts everywhere. Per-event platform routing lets you send 
 | `/notify:set-bark` | Interactive Bark setup (server, device key, group, sound, level) |
 | `/notify:recap-model` | Set model for notification recaps |
 | `/notify:event` | Toggle a single event without the TUI (`<event> <on\|off>`) — reports the new value; run `/reload` to re-register listeners |
-| `/notify:test` | Send test notification to all enabled platforms |
+| `/notify:test` | Send test notification to all enabled platforms (optional delay: `/notify:test 5`) |
 
 ## Special Triggers
 
@@ -53,7 +53,7 @@ notify_user({
 })
 ```
 
-An explicit semantic priority overrides configured urgency for that dispatch on platforms that support it: `low`/`normal`/`high` map to Gotify `2`/`5`/`8`, ntfy `2`/`3`/`5`, and Bark `passive`/`active`/`timeSensitive`. Native and Telegram have no priority input and ignore it. When omitted, Gotify and ntfy retain their configured numeric priorities, and Bark sends no `level` (Bark's own default is `active`).
+An explicit semantic priority overrides configured urgency for that dispatch on platforms that support it: `low`/`normal`/`high` map to Gotify `2`/`5`/`8`, ntfy `2`/`3`/`5`, and Bark `passive`/`active`/`timeSensitive`. Native, Telegram, and BEL have no priority input and ignore it. When omitted, Gotify and ntfy retain their configured numeric priorities, and Bark sends no `level` (Bark's own default is `active`).
 
 ## Platforms
 
@@ -80,7 +80,7 @@ After a terminal keypress, listed platforms stay quiet for `windowMs`. Default: 
 }
 ```
 
-Add `gotify`, `telegram`, `ntfy`, or `bark` to `platforms` to silence those channels too. Empty `platforms` silences all enabled platforms (same as `events.*.platforms`). Blocking events (`ask_user_prompt`, `permission_request`) are never silenced — see below.
+Add `gotify`, `telegram`, `ntfy`, `bark`, or `bel` to `platforms` to silence those channels too. Empty `platforms` silences all enabled platforms (same as `events.*.platforms`). Blocking events (`ask_user_prompt`, `permission_request`) are never silenced — see below.
 
 ### Re-notify unanswered prompts
 
@@ -160,6 +160,42 @@ Notes:
 - **Icon:** notifications default to the Pi badge (`assets/pi-icon.png`, served from this repo via raw.githubusercontent.com). Bark only accepts remote image URLs and caches each URL once — override with your own URL via `icon`. An explicit `icon` always wins.
 - **Level:** `active` (default, banner), `passive` (notification list only), `timeSensitive` (breaks through Focus), `critical` (rings even muted; needs the entitlement enabled in the Bark app). When `level` is set it wins over the semantic priority mapping; when unset, `notify_user`'s `priority` maps low/normal/high → passive/active/timeSensitive, and plain event dispatches send no level (Bark default `active`).
 - **Params:** title/body are always the event's; other Bark parameters (markdown, image, badge, url/copy/action, encryption, batch keys) are intentionally out of scope.
+
+### BEL
+
+Rings the terminal Pi runs in — one ASCII bell byte (`0x07`) written to stdout. tmux turns that into a highlighted window in the status line when you are looking elsewhere.
+
+```json
+{
+  "bel": {
+    "enabled": true
+  }
+}
+```
+
+Notes:
+
+- **Interactive TTY only.** The byte is written only when `process.stdout.isTTY` is true, so redirected output and piped RPC transports (Zed, VS Code pendant, ACP hosts) stay untouched. Outside a TTY the platform is a silent no-op, not a failure.
+- **One ring per dispatch.** Priority does not change the count; an unanswered blocking prompt already re-sends on the re-notify interval, and each reminder rings again.
+- **Attention only.** BEL carries no title, body, or priority. The platforms that carry text still do.
+- **Silence after input applies** like any other channel (blocking events stay exempt).
+
+#### tmux
+
+tmux raises a bell from a background window to a status-line flag on that window, and drops a bell from the current window (it is passed through to the outer terminal, which usually ignores it). So BEL is useful precisely when you have switched away from Pi: the window lights up and stays lit until you visit it.
+
+Defaults already flag windows (`monitor-bell on`, `bell-action any`). Useful knobs:
+
+```tmux
+set -g  bell-action other          # only bells from non-current windows alert
+set -g  visual-bell on             # status-line message instead of pass-through
+setw -g monitor-bell on            # flag windows that received a bell (default)
+setw -g window-status-bell-style "fg=yellow,bold"
+```
+
+`bell-action none` disables bell alerts entirely; `visual-bell both` shows the message and passes the bell through. The flag clears when the window is visited.
+
+To see it when testing from inside Pi, give `/notify:test` a delay and switch windows first: `/notify:test 5`.
 
 ## Configurables
 

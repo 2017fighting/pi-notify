@@ -18,6 +18,7 @@ const VALID_PLATFORMS: ReadonlySet<NotifyPlatform> = new Set([
   "telegram",
   "ntfy",
   "bark",
+  "bel",
 ]);
 
 /**

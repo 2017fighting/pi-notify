@@ -91,3 +91,33 @@ describe("loadConfig deep copy", () => {
     assert.equal(reloaded.telegram.enabled, true);
   });
 });
+
+describe("bel platform config", () => {
+  beforeEach(() => {
+    freshHome();
+  });
+
+  it("defaults to disabled with no config file", () => {
+    assert.deepEqual(DEFAULT_CONFIG.bel, { enabled: false });
+    assert.equal(loadConfig().bel.enabled, false);
+  });
+
+  it("merges an enabled flag without sharing the defaults object", () => {
+    const dir = join(home, ".pi", "agent", "notify");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "config.json"),
+      JSON.stringify({ bel: { enabled: true } }),
+    );
+
+    assert.equal(loadConfig().bel.enabled, true);
+    assert.equal(DEFAULT_CONFIG.bel.enabled, false);
+  });
+
+  it("round-trips bel through save and load", () => {
+    const config = loadConfig();
+    config.bel.enabled = true;
+    saveConfig(config);
+    assert.equal(loadConfig().bel.enabled, true);
+  });
+});

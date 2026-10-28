@@ -11,7 +11,7 @@ allowed-tools:
 # Notify User
 
 Use the `notify_user` tool to send notifications to the user's configured
-platforms (native OS, Gotify, Telegram, ntfy, Bark).
+platforms (native OS, Gotify, Telegram, ntfy, Bark, BEL).
 
 ## When to use notify_user
 

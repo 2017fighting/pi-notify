@@ -22,6 +22,25 @@ import { sendGotifyNotification } from "./platforms/gotify.js";
 import { sendTelegramNotification } from "./platforms/telegram.js";
 import { sendNtfyNotification } from "./platforms/ntfy.js";
 import { sendBarkNotification } from "./platforms/bark.js";
+import { sendBelNotification } from "./platforms/bel.js";
+
+/** Longest delay `/notify:test` accepts, in seconds. */
+export const TEST_DELAY_MAX_SECONDS = 300;
+
+/**
+ * Parse the optional delay argument of `/notify:test`.
+ *
+ * Empty or invalid input means "send now"; values round to whole seconds and
+ * clamp to `TEST_DELAY_MAX_SECONDS`. The delay exists so a tmux user can
+ * switch to another window and see the BEL window flag appear.
+ */
+export function parseTestDelay(args: string): number {
+  const raw = args.trim();
+  if (raw === "") return 0;
+  const seconds = Number(raw);
+  if (!Number.isFinite(seconds) || seconds <= 0) return 0;
+  return Math.min(TEST_DELAY_MAX_SECONDS, Math.round(seconds));
+}
 
 /**
  * Collect models for the recap selector from Pi's live model registry.
@@ -356,12 +375,21 @@ export function registerNotifyCommands(pi: ExtensionAPI): void {
   pi.registerCommand(
     `${UNIPI_PREFIX}${NOTIFY_COMMANDS.TEST}`,
     {
-      description: "Send a test notification to all enabled platforms",
-      handler: async (_args: string, ctx: ExtensionContext) => {
+      description: "Send a test notification to all enabled platforms (optional delay in seconds)",
+      handler: async (args: string, ctx: ExtensionContext) => {
         const config = loadConfig();
         const title = "Pi — Test Notification";
         const message = `Test notification sent at ${new Date().toLocaleTimeString()}`;
         const results: string[] = [];
+
+        const delaySeconds = parseTestDelay(args);
+        if (delaySeconds > 0) {
+          ctx.ui.notify(
+            `Sending test in ${delaySeconds}s — switch to another tmux window now to test BEL.`,
+            "info"
+          );
+          await new Promise((resolve) => setTimeout(resolve, delaySeconds * 1000));
+        }
 
         // Native
         if (config.native.enabled) {
@@ -460,6 +488,13 @@ export function registerNotifyCommands(pi: ExtensionAPI): void {
               `✗ Bark: ${err instanceof Error ? err.message : "failed"}`
             );
           }
+        }
+
+        // BEL — terminal bell, interactive TTY only
+        if (config.bel.enabled) {
+          results.push(
+            sendBelNotification() ? "✓ BEL: sent" : "— BEL: skipped (non-TTY)"
+          );
         }
 
         if (results.length === 0) {

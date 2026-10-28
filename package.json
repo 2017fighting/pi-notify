@@ -1,7 +1,7 @@
 {
   "name": "@raincore/pi-notify",
-  "version": "0.1.1",
-  "description": "Cross-platform notification extension for Pi — native OS, Gotify, Telegram, ntfy, and Bark notifications for agent lifecycle events",
+  "version": "0.2.0",
+  "description": "Cross-platform notification extension for Pi — native OS, Gotify, Telegram, ntfy, Bark, and terminal BEL notifications for agent lifecycle events",
   "type": "module",
   "main": "index.ts",
   "license": "MIT",
@@ -19,7 +19,9 @@
     "bark",
     "gotify",
     "ntfy",
-    "telegram"
+    "telegram",
+    "bel",
+    "terminal-bell"
   ],
   "scripts": {
     "test": "tsc --noEmit && npx tsx --test src/__tests__/*.test.ts __tests__/*.test.ts",
